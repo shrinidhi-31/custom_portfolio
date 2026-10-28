@@ -1,0 +1,1410 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PortfoliCraft - Interactive Portfolio Builder & Generator</title>
+  <meta name="description" content="Build, preview, and generate your live professional portfolio with one click. Share your portfolio link instantly.">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- LZ-String for URL compression -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: 'var(--brand-50)',
+              100: 'var(--brand-100)',
+              200: 'var(--brand-200)',
+              300: 'var(--brand-300)',
+              400: 'var(--brand-400)',
+              500: 'var(--brand-500)',
+              600: 'var(--brand-600)',
+              700: 'var(--brand-700)',
+              800: 'var(--brand-800)',
+              900: 'var(--brand-900)',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      --brand-50: #eef2ff;
+      --brand-100: #e0e7ff;
+      --brand-200: #c7d2fe;
+      --brand-300: #a5b4fc;
+      --brand-400: #818cf8;
+      --brand-500: #6366f1;
+      --brand-600: #4f46e5;
+      --brand-700: #4338ca;
+      --brand-800: #3730a3;
+      --brand-900: #312e81;
+    }
+
+    /* Custom scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.05);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(100, 116, 139, 0.3);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(100, 116, 139, 0.5);
+    }
+
+    .glass-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    .dark .glass-card {
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .animated-gradient {
+      background-size: 200% 200%;
+      animation: gradientShift 6s ease infinite;
+    }
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+  </style>
+</head>
+<body class="h-full bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-200">
+
+  <!-- ================= TOP APP BAR (Editor Controls) ================= -->
+  <header id="top-navbar" class="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 py-2.5 flex items-center justify-between shadow-xs">
+    <div class="flex items-center space-x-3">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-violet-500 flex items-center justify-center text-white shadow-md shadow-brand-500/20">
+        <i data-lucide="sparkles" class="w-5 h-5"></i>
+      </div>
+      <div>
+        <h1 class="text-base font-bold tracking-tight flex items-center gap-1.5">
+          PortfoliCraft
+          <span class="text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded-full bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300">Live Builder</span>
+        </h1>
+        <p class="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">Fill data &bull; Live preview &bull; Instant shareable link</p>
+      </div>
+    </div>
+
+    <!-- Center View Mode Switcher -->
+    <div class="hidden md:flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl text-xs font-medium">
+      <button id="view-split-btn" onclick="setViewMode('split')" class="px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 bg-white dark:bg-slate-700 shadow-xs font-semibold text-brand-600 dark:text-brand-400">
+        <i data-lucide="columns-2" class="w-3.5 h-3.5"></i> Split View
+      </button>
+      <button id="view-editor-btn" onclick="setViewMode('editor')" class="px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-slate-900">
+        <i data-lucide="edit-3" class="w-3.5 h-3.5"></i> Editor Only
+      </button>
+      <button id="view-preview-btn" onclick="setViewMode('preview')" class="px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-slate-900">
+        <i data-lucide="eye" class="w-3.5 h-3.5"></i> Live Preview
+      </button>
+    </div>
+
+    <!-- Right Action Buttons -->
+    <div class="flex items-center space-x-2">
+      <!-- Theme & Accent Dropdown / Buttons -->
+      <button onclick="toggleDarkMode()" title="Toggle Dark/Light Mode" class="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+        <i data-lucide="moon" id="theme-icon" class="w-4 h-4"></i>
+      </button>
+
+      <!-- Load Demo Data Button -->
+      <button onclick="loadSampleData()" title="Fill with rich demo profile" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition">
+        <i data-lucide="wand-2" class="w-3.5 h-3.5"></i> Demo Data
+      </button>
+
+      <!-- Export Standalone HTML -->
+      <button onclick="exportStandaloneHTML()" title="Download as single self-contained HTML file" class="hidden lg:flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition">
+        <i data-lucide="download" class="w-3.5 h-3.5"></i> Export HTML
+      </button>
+
+      <!-- Generate Share Link (Primary Action) -->
+      <button onclick="openShareModal()" class="flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold text-white bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-700 hover:to-brand-600 rounded-xl shadow-md shadow-brand-500/25 transition transform active:scale-95">
+        <i data-lucide="link-2" class="w-3.5 h-3.5"></i>
+        <span>Share Link</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ================= MAIN CONTAINER ================= -->
+  <main id="main-layout" class="h-[calc(100vh-57px)] flex overflow-hidden">
+    
+    <!-- ================= LEFT COLUMN: DATA INPUT EDITOR ================= -->
+    <section id="editor-column" class="w-full md:w-1/2 lg:w-[480px] xl:w-[520px] shrink-0 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-y-auto flex flex-col">
+      <div class="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800/80 sticky top-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm z-20 flex items-center justify-between">
+        <div>
+          <h2 class="text-sm font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2">
+            <i data-lucide="sliders" class="w-4 h-4 text-brand-600"></i> Portfolio Configuration
+          </h2>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Changes reflect instantaneously in the preview.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <!-- Color Palette Picker -->
+          <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg" title="Accent Color">
+            <button onclick="setAccentColor('indigo')" class="w-4 h-4 rounded-full bg-indigo-600 ring-1 ring-white/50 focus:scale-110 transition"></button>
+            <button onclick="setAccentColor('emerald')" class="w-4 h-4 rounded-full bg-emerald-600 ring-1 ring-white/50 focus:scale-110 transition"></button>
+            <button onclick="setAccentColor('violet')" class="w-4 h-4 rounded-full bg-violet-600 ring-1 ring-white/50 focus:scale-110 transition"></button>
+            <button onclick="setAccentColor('rose')" class="w-4 h-4 rounded-full bg-rose-600 ring-1 ring-white/50 focus:scale-110 transition"></button>
+            <button onclick="setAccentColor('sky')" class="w-4 h-4 rounded-full bg-sky-600 ring-1 ring-white/50 focus:scale-110 transition"></button>
+            <button onclick="setAccentColor('amber')" class="w-4 h-4 rounded-full bg-amber-600 ring-1 ring-white/50 focus:scale-110 transition"></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Editor Accordion Form Sections -->
+      <div class="p-4 sm:p-5 space-y-4 pb-20">
+
+        <!-- SECTION 1: Personal & Bio -->
+        <details class="group bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xs" open>
+          <summary class="px-4 py-3 cursor-pointer select-none font-semibold text-xs tracking-wide uppercase text-slate-700 dark:text-slate-300 flex items-center justify-between group-hover:bg-slate-100/70 dark:group-hover:bg-slate-800/70 transition">
+            <span class="flex items-center gap-2">
+              <i data-lucide="user" class="w-4 h-4 text-brand-500"></i> 1. Personal & Basic Info
+            </span>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 transition-transform group-open:rotate-180"></i>
+          </summary>
+          <div class="p-4 space-y-3.5 border-t border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/50">
+            <div>
+              <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Full Name</label>
+              <input type="text" id="input-name" oninput="updatePortfolio()" placeholder="Alex Morgan" class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Professional Title / Headline</label>
+              <input type="text" id="input-title" oninput="updatePortfolio()" placeholder="Full Stack Engineer & UI Architect" class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Tagline / Short Pitch</label>
+              <textarea id="input-tagline" oninput="updatePortfolio()" rows="2" placeholder="Crafting performant web experiences, intelligent interfaces, and accessible design systems." class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500"></textarea>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Location</label>
+                <input type="text" id="input-location" oninput="updatePortfolio()" placeholder="San Francisco, CA" class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Email Address</label>
+                <input type="email" id="input-email" oninput="updatePortfolio()" placeholder="alex@domain.com" class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Avatar / Photo URL</label>
+              <div class="flex gap-2">
+                <input type="url" id="input-avatar" oninput="updatePortfolio()" placeholder="https://images.unsplash.com/photo-..." class="flex-1 px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
+                <label class="cursor-pointer px-3 py-2 text-xs font-medium bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-200" title="Upload local image">
+                  <i data-lucide="upload" class="w-3.5 h-3.5"></i>
+                  <input type="file" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
+                </label>
+              </div>
+            </div>
+            <div class="flex items-center justify-between pt-1">
+              <span class="text-xs font-medium text-slate-700 dark:text-slate-300">Available for Opportunities</span>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="input-available" onchange="updatePortfolio()" checked class="sr-only peer">
+                <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+              </label>
+            </div>
+          </div>
+        </details>
+
+        <!-- SECTION 2: Social Links & Resume -->
+        <details class="group bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xs">
+          <summary class="px-4 py-3 cursor-pointer select-none font-semibold text-xs tracking-wide uppercase text-slate-700 dark:text-slate-300 flex items-center justify-between group-hover:bg-slate-100/70 dark:group-hover:bg-slate-800/70 transition">
+            <span class="flex items-center gap-2">
+              <i data-lucide="share-2" class="w-4 h-4 text-brand-500"></i> 2. Social Links & Resume
+            </span>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 transition-transform group-open:rotate-180"></i>
+          </summary>
+          <div class="p-4 space-y-3 border-t border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/50">
+            <div>
+              <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">GitHub Profile URL</label>
+              <input type="url" id="input-github" oninput="updatePortfolio()" placeholder="https://github.com/username" class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">LinkedIn Profile URL</label>
+              <input type="url" id="input-linkedin" oninput="updatePortfolio()" placeholder="https://linkedin.com/in/username" class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Twitter / X URL</label>
+              <input type="url" id="input-twitter" oninput="updatePortfolio()" placeholder="https://x.com/username" class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Resume / CV Download URL</label>
+              <input type="url" id="input-resume" oninput="updatePortfolio()" placeholder="https://example.com/resume.pdf" class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
+            </div>
+          </div>
+        </details>
+
+        <!-- SECTION 3: About & Highlights -->
+        <details class="group bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xs">
+          <summary class="px-4 py-3 cursor-pointer select-none font-semibold text-xs tracking-wide uppercase text-slate-700 dark:text-slate-300 flex items-center justify-between group-hover:bg-slate-100/70 dark:group-hover:bg-slate-800/70 transition">
+            <span class="flex items-center gap-2">
+              <i data-lucide="book-open" class="w-4 h-4 text-brand-500"></i> 3. About & Quick Stats
+            </span>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 transition-transform group-open:rotate-180"></i>
+          </summary>
+          <div class="p-4 space-y-3.5 border-t border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/50">
+            <div>
+              <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Extended About Me</label>
+              <textarea id="input-about" oninput="updatePortfolio()" rows="4" placeholder="Share your background, passions, principles, and what drives you as an engineer/creator..." class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500"></textarea>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <div>
+                <label class="block text-[11px] font-medium text-slate-600 dark:text-slate-400 mb-1">Stat 1 (e.g. 5+)</label>
+                <input type="text" id="input-stat1-num" oninput="updatePortfolio()" placeholder="5+" class="w-full px-2 py-1.5 text-xs rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                <input type="text" id="input-stat1-lbl" oninput="updatePortfolio()" placeholder="Years Exp." class="w-full mt-1 px-2 py-1 text-[11px] rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500">
+              </div>
+              <div>
+                <label class="block text-[11px] font-medium text-slate-600 dark:text-slate-400 mb-1">Stat 2 (e.g. 30+)</label>
+                <input type="text" id="input-stat2-num" oninput="updatePortfolio()" placeholder="30+" class="w-full px-2 py-1.5 text-xs rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                <input type="text" id="input-stat2-lbl" oninput="updatePortfolio()" placeholder="Projects" class="w-full mt-1 px-2 py-1 text-[11px] rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500">
+              </div>
+              <div>
+                <label class="block text-[11px] font-medium text-slate-600 dark:text-slate-400 mb-1">Stat 3 (e.g. 99%)</label>
+                <input type="text" id="input-stat3-num" oninput="updatePortfolio()" placeholder="99%" class="w-full px-2 py-1.5 text-xs rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                <input type="text" id="input-stat3-lbl" oninput="updatePortfolio()" placeholder="Satisfaction" class="w-full mt-1 px-2 py-1 text-[11px] rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500">
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <!-- SECTION 4: Skills -->
+        <details class="group bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xs">
+          <summary class="px-4 py-3 cursor-pointer select-none font-semibold text-xs tracking-wide uppercase text-slate-700 dark:text-slate-300 flex items-center justify-between group-hover:bg-slate-100/70 dark:group-hover:bg-slate-800/70 transition">
+            <span class="flex items-center gap-2">
+              <i data-lucide="cpu" class="w-4 h-4 text-brand-500"></i> 4. Skills & Technologies
+            </span>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 transition-transform group-open:rotate-180"></i>
+          </summary>
+          <div class="p-4 space-y-3 border-t border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/50">
+            <div>
+              <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Frontend (Comma separated)</label>
+              <input type="text" id="input-skills-frontend" oninput="updatePortfolio()" placeholder="TypeScript, React, Next.js, Tailwind CSS, Vue" class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Backend & Databases</label>
+              <input type="text" id="input-skills-backend" oninput="updatePortfolio()" placeholder="Node.js, Python, PostgreSQL, Redis, GraphQL" class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">DevOps, AI & Tools</label>
+              <input type="text" id="input-skills-tools" oninput="updatePortfolio()" placeholder="Docker, AWS, Git, CI/CD, OpenAI API, Figma" class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
+            </div>
+          </div>
+        </details>
+
+        <!-- SECTION 5: Projects -->
+        <details class="group bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xs" open>
+          <summary class="px-4 py-3 cursor-pointer select-none font-semibold text-xs tracking-wide uppercase text-slate-700 dark:text-slate-300 flex items-center justify-between group-hover:bg-slate-100/70 dark:group-hover:bg-slate-800/70 transition">
+            <span class="flex items-center gap-2">
+              <i data-lucide="layers" class="w-4 h-4 text-brand-500"></i> 5. Featured Projects
+            </span>
+            <div class="flex items-center gap-2">
+              <span id="project-count-badge" class="px-1.5 py-0.5 text-[10px] font-bold rounded-md bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300">0</span>
+              <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 transition-transform group-open:rotate-180"></i>
+            </div>
+          </summary>
+          <div class="p-4 space-y-4 border-t border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/50">
+            <div id="projects-container" class="space-y-4">
+              <!-- Dynamically populated project forms -->
+            </div>
+            <button onclick="addProjectItem()" class="w-full py-2.5 px-3 text-xs font-semibold rounded-xl border border-dashed border-brand-400 dark:border-brand-600 text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-950/40 transition flex items-center justify-center gap-1.5">
+              <i data-lucide="plus-circle" class="w-4 h-4"></i> Add Another Project
+            </button>
+          </div>
+        </details>
+
+        <!-- SECTION 6: Work Experience -->
+        <details class="group bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xs">
+          <summary class="px-4 py-3 cursor-pointer select-none font-semibold text-xs tracking-wide uppercase text-slate-700 dark:text-slate-300 flex items-center justify-between group-hover:bg-slate-100/70 dark:group-hover:bg-slate-800/70 transition">
+            <span class="flex items-center gap-2">
+              <i data-lucide="briefcase" class="w-4 h-4 text-brand-500"></i> 6. Experience Timeline
+            </span>
+            <div class="flex items-center gap-2">
+              <span id="exp-count-badge" class="px-1.5 py-0.5 text-[10px] font-bold rounded-md bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300">0</span>
+              <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 transition-transform group-open:rotate-180"></i>
+            </div>
+          </summary>
+          <div class="p-4 space-y-4 border-t border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/50">
+            <div id="experience-container" class="space-y-4">
+              <!-- Dynamically populated experience forms -->
+            </div>
+            <button onclick="addExperienceItem()" class="w-full py-2.5 px-3 text-xs font-semibold rounded-xl border border-dashed border-brand-400 dark:border-brand-600 text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-950/40 transition flex items-center justify-center gap-1.5">
+              <i data-lucide="plus-circle" class="w-4 h-4"></i> Add Experience
+            </button>
+          </div>
+        </details>
+
+        <!-- SECTION 7: Education & Certifications -->
+        <details class="group bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xs">
+          <summary class="px-4 py-3 cursor-pointer select-none font-semibold text-xs tracking-wide uppercase text-slate-700 dark:text-slate-300 flex items-center justify-between group-hover:bg-slate-100/70 dark:group-hover:bg-slate-800/70 transition">
+            <span class="flex items-center gap-2">
+              <i data-lucide="graduation-cap" class="w-4 h-4 text-brand-500"></i> 7. Education & Credentials
+            </span>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 transition-transform group-open:rotate-180"></i>
+          </summary>
+          <div class="p-4 space-y-4 border-t border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/50">
+            <div id="education-container" class="space-y-4">
+              <!-- Dynamically populated education forms -->
+            </div>
+            <button onclick="addEducationItem()" class="w-full py-2.5 px-3 text-xs font-semibold rounded-xl border border-dashed border-brand-400 dark:border-brand-600 text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-950/40 transition flex items-center justify-center gap-1.5">
+              <i data-lucide="plus-circle" class="w-4 h-4"></i> Add Education
+            </button>
+          </div>
+        </details>
+
+      </div>
+    </section>
+
+    <!-- ================= RIGHT COLUMN: LIVE PORTFOLIO PREVIEW ================= -->
+    <section id="preview-column" class="flex-1 overflow-y-auto bg-slate-100 dark:bg-slate-950 relative scroll-smooth">
+      
+      <!-- Portfolio Website Wrapper -->
+      <div id="portfolio-render" class="min-h-full max-w-4xl mx-auto bg-white dark:bg-slate-900 shadow-xl border-x border-slate-200/60 dark:border-slate-800 flex flex-col">
+
+        <!-- Portfolio Nav -->
+        <nav class="sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 px-6 py-4 flex items-center justify-between">
+          <a href="#hero-section" class="font-extrabold text-lg tracking-tight flex items-center gap-2">
+            <span id="preview-nav-name" class="bg-gradient-to-r from-brand-600 to-violet-600 bg-clip-text text-transparent font-bold">Alex Morgan</span>
+          </a>
+          <div class="hidden sm:flex items-center space-x-6 text-xs font-semibold text-slate-600 dark:text-slate-300">
+            <a href="#about-section" class="hover:text-brand-600 transition">About</a>
+            <a href="#skills-section" class="hover:text-brand-600 transition">Skills</a>
+            <a href="#projects-section" class="hover:text-brand-600 transition">Projects</a>
+            <a href="#experience-section" class="hover:text-brand-600 transition">Experience</a>
+            <a href="#contact-section" class="px-3 py-1.5 rounded-full bg-brand-600 text-white hover:bg-brand-700 transition">Get In Touch</a>
+          </div>
+        </nav>
+
+        <!-- Hero Section -->
+        <header id="hero-section" class="px-6 sm:px-12 pt-12 pb-14 border-b border-slate-100 dark:border-slate-800/80 relative overflow-hidden">
+          <div class="absolute -top-24 -right-24 w-80 h-80 bg-brand-500/10 dark:bg-brand-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+          <div class="flex flex-col-reverse md:flex-row items-start md:items-center justify-between gap-8 relative z-10">
+            <div class="flex-1 space-y-4">
+              <!-- Available Badge -->
+              <div id="preview-badge-container">
+                <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  Available for new opportunities
+                </span>
+              </div>
+
+              <!-- Main Greeting & Name -->
+              <div class="space-y-1">
+                <p class="text-xs font-semibold uppercase tracking-widest text-brand-600 dark:text-brand-400">Hi there, I am</p>
+                <h1 id="preview-hero-name" class="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+                  Alex Morgan
+                </h1>
+                <p id="preview-hero-title" class="text-lg sm:text-xl font-medium text-slate-600 dark:text-slate-300 pt-1">
+                  Full Stack Engineer &amp; UI Architect
+                </p>
+              </div>
+
+              <!-- Tagline -->
+              <p id="preview-hero-tagline" class="text-sm sm:text-base text-slate-600 dark:text-slate-400 max-w-xl leading-relaxed">
+                Crafting performant web experiences, intelligent interfaces, and accessible design systems.
+              </p>
+
+              <!-- Location & Quick Meta -->
+              <div class="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400 pt-1">
+                <span id="preview-location" class="flex items-center gap-1.5">
+                  <i data-lucide="map-pin" class="w-3.5 h-3.5 text-slate-400"></i> San Francisco, CA
+                </span>
+                <span id="preview-email-meta" class="flex items-center gap-1.5">
+                  <i data-lucide="mail" class="w-3.5 h-3.5 text-slate-400"></i> alex@domain.com
+                </span>
+              </div>
+
+              <!-- Action Buttons & Socials -->
+              <div class="flex flex-wrap items-center gap-3 pt-3">
+                <a id="preview-cta-contact" href="#contact-section" class="px-5 py-2.5 rounded-xl font-semibold text-xs text-white bg-brand-600 hover:bg-brand-700 shadow-md shadow-brand-500/20 transition flex items-center gap-1.5">
+                  <i data-lucide="send" class="w-3.5 h-3.5"></i> Contact Me
+                </a>
+                <a id="preview-cta-resume" href="#" target="_blank" class="px-5 py-2.5 rounded-xl font-semibold text-xs text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition flex items-center gap-1.5">
+                  <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Resume / CV
+                </a>
+                
+                <div class="flex items-center gap-1 ml-auto sm:ml-0">
+                  <a id="preview-social-github" href="#" target="_blank" class="p-2 rounded-xl text-slate-600 dark:text-slate-400 hover:text-brand-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="GitHub">
+                    <i data-lucide="github" class="w-4 h-4"></i>
+                  </a>
+                  <a id="preview-social-linkedin" href="#" target="_blank" class="p-2 rounded-xl text-slate-600 dark:text-slate-400 hover:text-brand-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="LinkedIn">
+                    <i data-lucide="linkedin" class="w-4 h-4"></i>
+                  </a>
+                  <a id="preview-social-twitter" href="#" target="_blank" class="p-2 rounded-xl text-slate-600 dark:text-slate-400 hover:text-brand-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Twitter / X">
+                    <i data-lucide="twitter" class="w-4 h-4"></i>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <!-- Avatar -->
+            <div class="relative group mx-auto md:mx-0">
+              <div class="w-32 h-32 sm:w-40 sm:h-40 rounded-2xl overflow-hidden ring-4 ring-brand-500/20 shadow-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                <img id="preview-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80" alt="Avatar" class="w-full h-full object-cover">
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <!-- About Section & Highlights -->
+        <section id="about-section" class="px-6 sm:px-12 py-12 border-b border-slate-100 dark:border-slate-800/80">
+          <div class="max-w-3xl space-y-6">
+            <div>
+              <h2 class="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">About Me</h2>
+              <h3 class="text-2xl font-bold text-slate-900 dark:text-white mt-1">Passionate about elegant engineering &amp; design</h3>
+            </div>
+            
+            <p id="preview-about-text" class="text-sm leading-relaxed text-slate-600 dark:text-slate-300 whitespace-pre-line">
+              I am a software engineer with over 5 years of experience building modern web applications, scalable backends, and responsive user experiences. I specialize in the TypeScript ecosystem, cloud infrastructure, and turning complex problem domains into intuitive interfaces.
+            </p>
+
+            <!-- Metrics Cards -->
+            <div class="grid grid-cols-3 gap-4 pt-2">
+              <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-800 text-center">
+                <div id="preview-stat1-num" class="text-2xl sm:text-3xl font-extrabold text-brand-600 dark:text-brand-400">5+</div>
+                <div id="preview-stat1-lbl" class="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">Years Experience</div>
+              </div>
+              <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-800 text-center">
+                <div id="preview-stat2-num" class="text-2xl sm:text-3xl font-extrabold text-brand-600 dark:text-brand-400">30+</div>
+                <div id="preview-stat2-lbl" class="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">Projects Delivered</div>
+              </div>
+              <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-800 text-center">
+                <div id="preview-stat3-num" class="text-2xl sm:text-3xl font-extrabold text-brand-600 dark:text-brand-400">99%</div>
+                <div id="preview-stat3-lbl" class="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">Client Satisfaction</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Skills Section -->
+        <section id="skills-section" class="px-6 sm:px-12 py-12 border-b border-slate-100 dark:border-slate-800/80">
+          <div class="space-y-6">
+            <div>
+              <h2 class="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">Capabilities</h2>
+              <h3 class="text-2xl font-bold text-slate-900 dark:text-white mt-1">Technical Skills &amp; Stack</h3>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+              <!-- Frontend Group -->
+              <div class="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 space-y-3">
+                <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                  <i data-lucide="layout" class="w-4 h-4 text-brand-500"></i> Frontend Architecture
+                </div>
+                <div id="preview-skills-frontend" class="flex flex-wrap gap-1.5">
+                  <!-- Skill pills -->
+                </div>
+              </div>
+
+              <!-- Backend Group -->
+              <div class="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 space-y-3">
+                <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                  <i data-lucide="database" class="w-4 h-4 text-brand-500"></i> Backend &amp; Data
+                </div>
+                <div id="preview-skills-backend" class="flex flex-wrap gap-1.5">
+                  <!-- Skill pills -->
+                </div>
+              </div>
+
+              <!-- Tools Group -->
+              <div class="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 space-y-3">
+                <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                  <i data-lucide="cpu" class="w-4 h-4 text-brand-500"></i> Cloud, AI &amp; Tools
+                </div>
+                <div id="preview-skills-tools" class="flex flex-wrap gap-1.5">
+                  <!-- Skill pills -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Projects Section -->
+        <section id="projects-section" class="px-6 sm:px-12 py-12 border-b border-slate-100 dark:border-slate-800/80">
+          <div class="space-y-6">
+            <div>
+              <h2 class="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">Portfolio</h2>
+              <h3 class="text-2xl font-bold text-slate-900 dark:text-white mt-1">Featured Work &amp; Case Studies</h3>
+            </div>
+
+            <!-- Project Cards Grid -->
+            <div id="preview-projects-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Dynamically populated project cards -->
+            </div>
+          </div>
+        </section>
+
+        <!-- Experience Timeline Section -->
+        <section id="experience-section" class="px-6 sm:px-12 py-12 border-b border-slate-100 dark:border-slate-800/80">
+          <div class="space-y-6">
+            <div>
+              <h2 class="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">Career</h2>
+              <h3 class="text-2xl font-bold text-slate-900 dark:text-white mt-1">Professional Experience</h3>
+            </div>
+
+            <div id="preview-experience-list" class="space-y-6 relative pl-6 border-l-2 border-slate-200 dark:border-slate-800">
+              <!-- Dynamically populated experience items -->
+            </div>
+          </div>
+        </section>
+
+        <!-- Education Section -->
+        <section id="education-section" class="px-6 sm:px-12 py-12 border-b border-slate-100 dark:border-slate-800/80">
+          <div class="space-y-6">
+            <div>
+              <h2 class="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">Credentials</h2>
+              <h3 class="text-2xl font-bold text-slate-900 dark:text-white mt-1">Education &amp; Honors</h3>
+            </div>
+
+            <div id="preview-education-list" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <!-- Dynamically populated education items -->
+            </div>
+          </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section id="contact-section" class="px-6 sm:px-12 py-14 bg-slate-50/70 dark:bg-slate-950/40">
+          <div class="max-w-2xl mx-auto text-center space-y-4">
+            <h2 class="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">Let's Connect</h2>
+            <h3 class="text-3xl font-extrabold text-slate-900 dark:text-white">Have a project or opportunity in mind?</h3>
+            <p class="text-sm text-slate-600 dark:text-slate-400">
+              I'm always open to discussing new products, engineering challenges, or creative collaborations.
+            </p>
+
+            <div class="pt-4 flex flex-wrap justify-center gap-3">
+              <a id="preview-contact-email-btn" href="mailto:alex@domain.com" class="px-6 py-3 rounded-2xl font-semibold text-xs text-white bg-brand-600 hover:bg-brand-700 shadow-lg shadow-brand-500/25 transition flex items-center gap-2">
+                <i data-lucide="mail" class="w-4 h-4"></i> Say Hello Direct via Email
+              </a>
+            </div>
+          </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="mt-auto px-6 py-6 border-t border-slate-100 dark:border-slate-800 text-center text-xs text-slate-400 dark:text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p>&copy; <span id="preview-year">2026</span> <span id="preview-footer-name">Alex Morgan</span>. All rights reserved.</p>
+          <p class="text-[11px] flex items-center gap-1">
+            Built &amp; Hosted with <span class="text-brand-500 font-bold">PortfoliCraft</span>
+          </p>
+        </footer>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ================= FLOATING VIEW TOGGLE IN FULLSCREEN PREVIEW ================= -->
+  <div id="floating-edit-pill" class="hidden fixed bottom-6 right-6 z-50">
+    <button onclick="setViewMode('split')" class="px-4 py-2.5 rounded-full font-semibold text-xs text-white bg-slate-900 dark:bg-white dark:text-slate-900 shadow-2xl hover:scale-105 transition flex items-center gap-2 ring-2 ring-brand-500">
+      <i data-lucide="sliders" class="w-4 h-4 text-brand-500"></i> Open Editor Controls
+    </button>
+  </div>
+
+  <!-- ================= SHARE MODAL ================= -->
+  <div id="share-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-200">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-5">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-brand-100 dark:bg-brand-950 flex items-center justify-center text-brand-600 dark:text-brand-400">
+            <i data-lucide="globe" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-base text-slate-900 dark:text-white">Your Live Portfolio Link</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Zero backend needed &bull; Complete profile encoded in link</p>
+          </div>
+        </div>
+        <button onclick="closeShareModal()" class="p-1 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+        Anyone opening this unique URL will instantly see your interactive, responsive portfolio. All your customized projects, experience, bio, and social links are encoded directly into the web address!
+      </p>
+
+      <div class="space-y-1.5">
+        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300">Shareable URL</label>
+        <div class="flex items-center gap-2">
+          <input type="text" id="share-link-input" readonly class="w-full px-3 py-2.5 text-xs font-mono bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 focus:outline-none select-all text-slate-700 dark:text-slate-200">
+          <button onclick="copyShareLink()" id="copy-btn" class="shrink-0 px-4 py-2.5 rounded-xl font-semibold text-xs text-white bg-brand-600 hover:bg-brand-700 shadow-md shadow-brand-500/20 transition flex items-center gap-1.5">
+            <i data-lucide="copy" class="w-4 h-4"></i> Copy
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick preview actions -->
+      <div class="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-100 dark:border-slate-800">
+        <a id="modal-test-link" href="#" target="_blank" class="text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1">
+          Open in New Tab <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+        </a>
+        <button onclick="exportStandaloneHTML()" class="text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-1">
+          <i data-lucide="file-code" class="w-3.5 h-3.5"></i> Or Download Static HTML File
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast notification -->
+  <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-semibold shadow-2xl flex items-center gap-2 opacity-0 pointer-events-none transition-all duration-200">
+    <i data-lucide="check-circle" class="w-4 h-4 text-emerald-500"></i>
+    <span id="toast-text">Link copied to clipboard!</span>
+  </div>
+
+  <!-- ================= APPLICATION LOGIC SCRIPT ================= -->
+  <script>
+    // Color palettes
+    const PALETTES = {
+      indigo: {
+        50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc', 400: '#818cf8',
+        500: '#6366f1', 600: '#4f46e5', 700: '#4338ca', 800: '#3730a3', 900: '#312e81'
+      },
+      emerald: {
+        50: '#ecfdf5', 100: '#d1fae5', 200: '#a7f3d0', 300: '#6ee7b7', 400: '#34d399',
+        500: '#10b981', 600: '#059669', 700: '#047857', 800: '#065f46', 900: '#064e3b'
+      },
+      violet: {
+        50: '#f5f3ff', 100: '#ede9fe', 200: '#ddd6fe', 300: '#c4b5fd', 400: '#a78bfa',
+        500: '#8b5cf6', 600: '#7c3aed', 700: '#6d28d9', 800: '#5b21b6', 900: '#4c1d95'
+      },
+      rose: {
+        50: '#fff1f2', 100: '#ffe4e6', 200: '#fecdd3', 300: '#fda4af', 400: '#fb7185',
+        500: '#f43f5e', 600: '#e11d48', 700: '#be123c', 800: '#9f1239', 900: '#881337'
+      },
+      sky: {
+        50: '#f0f9ff', 100: '#e0f2fe', 200: '#bae6fd', 300: '#7dd3fc', 400: '#38bdf8',
+        500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1', 800: '#075985', 900: '#0c4a6e'
+      },
+      amber: {
+        50: '#fffbeb', 100: '#fef3c7', 200: '#fde68a', 300: '#fcd34d', 400: '#fbbf24',
+        500: '#f59e0b', 600: '#d97706', 700: '#b45309', 800: '#92400e', 900: '#78350f'
+      }
+    };
+
+    // Default portfolio state
+    let portfolioData = {
+      accent: 'indigo',
+      darkMode: false,
+      name: "Alex Morgan",
+      title: "Senior Full Stack Engineer & UI Architect",
+      tagline: "Building high-performance distributed web applications, elegant design systems, and modern AI-powered developer tools.",
+      location: "San Francisco, CA",
+      email: "alex.morgan.dev@gmail.com",
+      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80",
+      available: true,
+      github: "https://github.com",
+      linkedin: "https://linkedin.com",
+      twitter: "https://twitter.com",
+      resume: "https://example.com/resume.pdf",
+      about: `Hello! I am a full-stack engineer and designer with over 6 years of experience transforming ambitious concepts into production-grade systems. I take pride in crafting software that is fast, resilient, and visually engaging.
+
+My focus centers on the TypeScript and modern cloud ecosystem, architecting scalable micro-frontends, robust GraphQL/REST APIs, and delightful interactive user experiences.`,
+      stats: {
+        stat1Num: "6+",
+        stat1Lbl: "Years Experience",
+        stat2Num: "42+",
+        stat2Lbl: "Production Releases",
+        stat3Num: "99.9%",
+        stat3Lbl: "System Uptime"
+      },
+      skills: {
+        frontend: ["TypeScript", "React", "Next.js", "Tailwind CSS", "Vue.js", "State Machines", "WebSockets"],
+        backend: ["Node.js", "Python / FastAPI", "PostgreSQL", "Redis", "GraphQL", "Docker", "Prisma"],
+        tools: ["AWS", "Terraform", "Git & GitHub Actions", "Figma", "OpenAI API", "CI/CD Pipelines"]
+      },
+      projects: [
+        {
+          title: "PulseFlow - Real-time Analytics Engine",
+          description: "High-throughput real-time event streaming and telemetry dashboard processing 50k+ events/sec with sub-second aggregate visualization.",
+          tags: ["Next.js", "TypeScript", "ClickHouse", "Tailwind CSS"],
+          liveUrl: "https://example.com",
+          githubUrl: "https://github.com",
+          imageUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80"
+        },
+        {
+          title: "Aura UI - Accessible Design System",
+          description: "An enterprise design system with 60+ headless components, strict WCAG 2.1 AAA compliance, and themeable token architecture.",
+          tags: ["React", "Radix UI", "Tailwind CSS", "Storybook"],
+          liveUrl: "https://example.com",
+          githubUrl: "https://github.com",
+          imageUrl: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&auto=format&fit=crop&q=80"
+        },
+        {
+          title: "NeuralDocs - AI Knowledge Assistant",
+          description: "RAG-powered conversational documentation search with vector embeddings, semantic hybrid lookup, and instant code synthesis.",
+          tags: ["Python", "FastAPI", "Pinecone", "React", "LangChain"],
+          liveUrl: "https://example.com",
+          githubUrl: "https://github.com",
+          imageUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80"
+        }
+      ],
+      experience: [
+        {
+          role: "Senior Staff Frontend Engineer",
+          company: "CloudScale Technologies",
+          location: "San Francisco, CA",
+          period: "2023 - Present",
+          description: "Led architectural modernization of flagship analytics suite, driving 40% improvement in Time to Interactive (TTI) and mentoring a cross-functional team of 12 engineers."
+        },
+        {
+          role: "Full Stack Software Engineer",
+          company: "Vanguard Digital Systems",
+          location: "New York, NY",
+          period: "2020 - 2023",
+          description: "Designed resilient microservices in Node.js and Go, handling payment processing and distributed event queues with 99.99% availability."
+        }
+      ],
+      education: [
+        {
+          degree: "B.S. in Computer Science",
+          institution: "University of California, Berkeley",
+          year: "2016 - 2020",
+          highlights: "Graduated with Honors. Focus on Distributed Systems & Human-Computer Interaction."
+        },
+        {
+          degree: "AWS Certified Solutions Architect",
+          institution: "Amazon Web Services",
+          year: "2022",
+          highlights: "Professional Certification in Cloud Infrastructure & Resilience."
+        }
+      ]
+    };
+
+    // ================= INITIALIZATION =================
+    window.addEventListener('DOMContentLoaded', () => {
+      // 1. Check if URL contains hash data or view flag
+      loadFromURL();
+
+      // 2. Populate input fields from portfolioData
+      populateFormFields();
+
+      // 3. Render projects, experience, education forms
+      renderDynamicFormLists();
+
+      // 4. Update the preview
+      updatePortfolio();
+
+      // 5. Apply saved accent & theme
+      applyAccent(portfolioData.accent || 'indigo');
+      if (portfolioData.darkMode) {
+        document.documentElement.classList.add('dark');
+        document.getElementById('theme-icon')?.setAttribute('data-lucide', 'sun');
+      }
+
+      // Initialize Lucide icons
+      lucide.createIcons();
+    });
+
+    // ================= URL SHARING & REHYDRATION =================
+    function getShareableURL(fullViewMode = true) {
+      try {
+        const json = JSON.stringify(portfolioData);
+        let compressed = '';
+        if (window.LZString) {
+          compressed = LZString.compressToEncodedURIComponent(json);
+        } else {
+          compressed = encodeURIComponent(btoa(unescape(encodeURIComponent(json))));
+        }
+        // Use clean base URL without hash or query
+        const base = window.location.href.split('#')[0].split('?')[0];
+        const modeFlag = fullViewMode ? 'view=portfolio&' : '';
+        return `${base}#${modeFlag}data=${compressed}`;
+      } catch (err) {
+        console.error("Error generating share URL", err);
+        return window.location.href;
+      }
+    }
+
+    function loadFromURL() {
+      const hash = window.location.hash.substring(1);
+      
+      if (hash) {
+        const params = new URLSearchParams(hash);
+        const dataParam = params.get('data');
+        const viewParam = params.get('view');
+
+        if (dataParam) {
+          try {
+            let decompressed = '';
+            if (window.LZString) {
+              decompressed = LZString.decompressFromEncodedURIComponent(dataParam);
+            }
+            if (!decompressed) {
+              decompressed = decodeURIComponent(escape(atob(decodeURIComponent(dataParam))));
+            }
+            if (decompressed) {
+              const parsed = JSON.parse(decompressed);
+              portfolioData = { ...portfolioData, ...parsed };
+            }
+          } catch (e) {
+            console.warn("Could not parse portfolio state from URL", e);
+          }
+        }
+
+        // If view is requested or standalone mode
+        if (viewParam === 'portfolio') {
+          setViewMode('preview');
+          document.getElementById('floating-edit-pill').classList.remove('hidden');
+        }
+      } else {
+        // Try restoring from localStorage if available
+        try {
+          const saved = localStorage.getItem('portfolicraft_saved_data');
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            portfolioData = { ...portfolioData, ...parsed };
+          }
+        } catch (e) {
+          console.warn("Could not read localStorage", e);
+        }
+      }
+    }
+
+    // ================= FORM REHYDRATION =================
+    function populateFormFields() {
+      document.getElementById('input-name').value = portfolioData.name || '';
+      document.getElementById('input-title').value = portfolioData.title || '';
+      document.getElementById('input-tagline').value = portfolioData.tagline || '';
+      document.getElementById('input-location').value = portfolioData.location || '';
+      document.getElementById('input-email').value = portfolioData.email || '';
+      document.getElementById('input-avatar').value = portfolioData.avatar || '';
+      document.getElementById('input-available').checked = portfolioData.available !== false;
+
+      document.getElementById('input-github').value = portfolioData.github || '';
+      document.getElementById('input-linkedin').value = portfolioData.linkedin || '';
+      document.getElementById('input-twitter').value = portfolioData.twitter || '';
+      document.getElementById('input-resume').value = portfolioData.resume || '';
+
+      document.getElementById('input-about').value = portfolioData.about || '';
+      document.getElementById('input-stat1-num').value = portfolioData.stats?.stat1Num || '';
+      document.getElementById('input-stat1-lbl').value = portfolioData.stats?.stat1Lbl || '';
+      document.getElementById('input-stat2-num').value = portfolioData.stats?.stat2Num || '';
+      document.getElementById('input-stat2-lbl').value = portfolioData.stats?.stat2Lbl || '';
+      document.getElementById('input-stat3-num').value = portfolioData.stats?.stat3Num || '';
+      document.getElementById('input-stat3-lbl').value = portfolioData.stats?.stat3Lbl || '';
+
+      document.getElementById('input-skills-frontend').value = (portfolioData.skills?.frontend || []).join(', ');
+      document.getElementById('input-skills-backend').value = (portfolioData.skills?.backend || []).join(', ');
+      document.getElementById('input-skills-tools').value = (portfolioData.skills?.tools || []).join(', ');
+    }
+
+    function renderDynamicFormLists() {
+      // 1. Projects
+      const projectsContainer = document.getElementById('projects-container');
+      projectsContainer.innerHTML = '';
+      (portfolioData.projects || []).forEach((proj, idx) => {
+        projectsContainer.innerHTML += `
+          <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-2 relative group/item">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-700 dark:text-slate-300">Project #${idx + 1}</span>
+              <button onclick="removeProjectItem(${idx})" class="p-1 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition" title="Delete project">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+            <input type="text" oninput="updateDynamicField('projects', ${idx}, 'title', this.value)" value="${escapeHtml(proj.title || '')}" placeholder="Project Title" class="w-full px-2.5 py-1.5 text-xs rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+            <textarea oninput="updateDynamicField('projects', ${idx}, 'description', this.value)" rows="2" placeholder="Brief description..." class="w-full px-2.5 py-1.5 text-xs rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">${escapeHtml(proj.description || '')}</textarea>
+            <input type="text" oninput="updateDynamicField('projects', ${idx}, 'tags', this.value.split(',').map(s=>s.trim()))" value="${escapeHtml((proj.tags || []).join(', '))}" placeholder="Tags: React, Node.js, AI" class="w-full px-2.5 py-1.5 text-xs rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+            <div class="grid grid-cols-2 gap-2">
+              <input type="url" oninput="updateDynamicField('projects', ${idx}, 'liveUrl', this.value)" value="${escapeHtml(proj.liveUrl || '')}" placeholder="Live Demo URL" class="w-full px-2.5 py-1.5 text-xs rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+              <input type="url" oninput="updateDynamicField('projects', ${idx}, 'githubUrl', this.value)" value="${escapeHtml(proj.githubUrl || '')}" placeholder="GitHub Repo URL" class="w-full px-2.5 py-1.5 text-xs rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+            </div>
+            <input type="url" oninput="updateDynamicField('projects', ${idx}, 'imageUrl', this.value)" value="${escapeHtml(proj.imageUrl || '')}" placeholder="Cover Image URL (optional)" class="w-full px-2.5 py-1.5 text-xs rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+          </div>
+        `;
+      });
+      document.getElementById('project-count-badge').textContent = (portfolioData.projects || []).length;
+
+      // 2. Experience
+      const expContainer = document.getElementById('experience-container');
+      expContainer.innerHTML = '';
+      (portfolioData.experience || []).forEach((exp, idx) => {
+        expContainer.innerHTML += `
+          <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-2 relative">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-700 dark:text-slate-300">Position #${idx + 1}</span>
+              <button onclick="removeExperienceItem(${idx})" class="p-1 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition" title="Delete experience">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <input type="text" oninput="updateDynamicField('experience', ${idx}, 'role', this.value)" value="${escapeHtml(exp.role || '')}" placeholder="Role Title (e.g. Lead Dev)" class="w-full px-2.5 py-1.5 text-xs rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+              <input type="text" oninput="updateDynamicField('experience', ${idx}, 'company', this.value)" value="${escapeHtml(exp.company || '')}" placeholder="Company Name" class="w-full px-2.5 py-1.5 text-xs rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <input type="text" oninput="updateDynamicField('experience', ${idx}, 'period', this.value)" value="${escapeHtml(exp.period || '')}" placeholder="Dates (e.g. 2021 - Present)" class="w-full px-2.5 py-1.5 text-xs rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+              <input type="text" oninput="updateDynamicField('experience', ${idx}, 'location', this.value)" value="${escapeHtml(exp.location || '')}" placeholder="Location (e.g. Remote / NYC)" class="w-full px-2.5 py-1.5 text-xs rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+            </div>
+            <textarea oninput="updateDynamicField('experience', ${idx}, 'description', this.value)" rows="2" placeholder="Key achievements and technologies used..." class="w-full px-2.5 py-1.5 text-xs rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">${escapeHtml(exp.description || '')}</textarea>
+          </div>
+        `;
+      });
+      document.getElementById('exp-count-badge').textContent = (portfolioData.experience || []).length;
+
+      // 3. Education
+      const eduContainer = document.getElementById('education-container');
+      eduContainer.innerHTML = '';
+      (portfolioData.education || []).forEach((edu, idx) => {
+        eduContainer.innerHTML += `
+          <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-2 relative">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-700 dark:text-slate-300">Item #${idx + 1}</span>
+              <button onclick="removeEducationItem(${idx})" class="p-1 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+            <input type="text" oninput="updateDynamicField('education', ${idx}, 'degree', this.value)" value="${escapeHtml(edu.degree || '')}" placeholder="Degree or Certification" class="w-full px-2.5 py-1.5 text-xs rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+            <div class="grid grid-cols-2 gap-2">
+              <input type="text" oninput="updateDynamicField('education', ${idx}, 'institution', this.value)" value="${escapeHtml(edu.institution || '')}" placeholder="University / Organization" class="w-full px-2.5 py-1.5 text-xs rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+              <input type="text" oninput="updateDynamicField('education', ${idx}, 'year', this.value)" value="${escapeHtml(edu.year || '')}" placeholder="Year (e.g. 2020)" class="w-full px-2.5 py-1.5 text-xs rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+            </div>
+            <input type="text" oninput="updateDynamicField('education', ${idx}, 'highlights', this.value)" value="${escapeHtml(edu.highlights || '')}" placeholder="Honors / Highlights" class="w-full px-2.5 py-1.5 text-xs rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+          </div>
+        `;
+      });
+
+      lucide.createIcons();
+    }
+
+    // ================= REAL-TIME PORTFOLIO PREVIEW UPDATE =================
+    function updatePortfolio() {
+      // Gather simple fields
+      portfolioData.name = document.getElementById('input-name').value || "Your Name";
+      portfolioData.title = document.getElementById('input-title').value || "Professional Title";
+      portfolioData.tagline = document.getElementById('input-tagline').value || "";
+      portfolioData.location = document.getElementById('input-location').value || "";
+      portfolioData.email = document.getElementById('input-email').value || "";
+      portfolioData.avatar = document.getElementById('input-avatar').value || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80";
+      portfolioData.available = document.getElementById('input-available').checked;
+
+      portfolioData.github = document.getElementById('input-github').value || "#";
+      portfolioData.linkedin = document.getElementById('input-linkedin').value || "#";
+      portfolioData.twitter = document.getElementById('input-twitter').value || "#";
+      portfolioData.resume = document.getElementById('input-resume').value || "#";
+
+      portfolioData.about = document.getElementById('input-about').value || "";
+      portfolioData.stats = {
+        stat1Num: document.getElementById('input-stat1-num').value || "-",
+        stat1Lbl: document.getElementById('input-stat1-lbl').value || "Exp",
+        stat2Num: document.getElementById('input-stat2-num').value || "-",
+        stat2Lbl: document.getElementById('input-stat2-lbl').value || "Projects",
+        stat3Num: document.getElementById('input-stat3-num').value || "-",
+        stat3Lbl: document.getElementById('input-stat3-lbl').value || "Score"
+      };
+
+      const splitSkills = (val) => val.split(',').map(s => s.trim()).filter(Boolean);
+      portfolioData.skills = {
+        frontend: splitSkills(document.getElementById('input-skills-frontend').value),
+        backend: splitSkills(document.getElementById('input-skills-backend').value),
+        tools: splitSkills(document.getElementById('input-skills-tools').value)
+      };
+
+      // Reflect in DOM Preview
+      document.getElementById('preview-nav-name').textContent = portfolioData.name;
+      document.getElementById('preview-hero-name').textContent = portfolioData.name;
+      document.getElementById('preview-hero-title').textContent = portfolioData.title;
+      document.getElementById('preview-hero-tagline').textContent = portfolioData.tagline;
+      document.getElementById('preview-location').innerHTML = `<i data-lucide="map-pin" class="w-3.5 h-3.5 text-slate-400"></i> ${escapeHtml(portfolioData.location)}`;
+      document.getElementById('preview-email-meta').innerHTML = `<i data-lucide="mail" class="w-3.5 h-3.5 text-slate-400"></i> ${escapeHtml(portfolioData.email)}`;
+      document.getElementById('preview-avatar').src = portfolioData.avatar;
+      
+      const badgeContainer = document.getElementById('preview-badge-container');
+      if (portfolioData.available) {
+        badgeContainer.style.display = 'block';
+      } else {
+        badgeContainer.style.display = 'none';
+      }
+
+      document.getElementById('preview-social-github').href = portfolioData.github;
+      document.getElementById('preview-social-linkedin').href = portfolioData.linkedin;
+      document.getElementById('preview-social-twitter').href = portfolioData.twitter;
+      document.getElementById('preview-cta-resume').href = portfolioData.resume;
+
+      document.getElementById('preview-about-text').textContent = portfolioData.about;
+      document.getElementById('preview-stat1-num').textContent = portfolioData.stats.stat1Num;
+      document.getElementById('preview-stat1-lbl').textContent = portfolioData.stats.stat1Lbl;
+      document.getElementById('preview-stat2-num').textContent = portfolioData.stats.stat2Num;
+      document.getElementById('preview-stat2-lbl').textContent = portfolioData.stats.stat2Lbl;
+      document.getElementById('preview-stat3-num').textContent = portfolioData.stats.stat3Num;
+      document.getElementById('preview-stat3-lbl').textContent = portfolioData.stats.stat3Lbl;
+
+      // Render Skills Badges
+      const renderPills = (arr) => arr.map(s => `
+        <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 text-slate-700 dark:text-slate-300 shadow-2xs">
+          ${escapeHtml(s)}
+        </span>
+      `).join('');
+
+      document.getElementById('preview-skills-frontend').innerHTML = renderPills(portfolioData.skills.frontend);
+      document.getElementById('preview-skills-backend').innerHTML = renderPills(portfolioData.skills.backend);
+      document.getElementById('preview-skills-tools').innerHTML = renderPills(portfolioData.skills.tools);
+
+      // Render Projects
+      const projGrid = document.getElementById('preview-projects-grid');
+      projGrid.innerHTML = (portfolioData.projects || []).map(p => `
+        <div class="group/card rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800 overflow-hidden hover:shadow-xl hover:border-brand-500/40 transition duration-300 flex flex-col">
+          ${p.imageUrl ? `
+            <div class="h-44 w-full overflow-hidden bg-slate-200 dark:bg-slate-800">
+              <img src="${escapeHtml(p.imageUrl)}" alt="${escapeHtml(p.title)}" class="w-full h-full object-cover group-hover/card:scale-105 transition duration-500">
+            </div>
+          ` : `
+            <div class="h-28 w-full bg-gradient-to-tr from-brand-600/20 to-violet-600/20 flex items-center justify-center text-brand-600">
+              <i data-lucide="code-2" class="w-8 h-8 opacity-40"></i>
+            </div>
+          `}
+          <div class="p-5 flex-1 flex flex-col justify-between space-y-4">
+            <div class="space-y-2">
+              <h4 class="font-bold text-base text-slate-900 dark:text-white group-hover/card:text-brand-600 transition">${escapeHtml(p.title)}</h4>
+              <p class="text-xs text-slate-600 dark:text-slate-400 line-clamp-3 leading-relaxed">${escapeHtml(p.description)}</p>
+              <div class="flex flex-wrap gap-1 pt-1">
+                ${(p.tags || []).map(t => `<span class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300">${escapeHtml(t)}</span>`).join('')}
+              </div>
+            </div>
+            <div class="flex items-center gap-3 pt-2 border-t border-slate-200/50 dark:border-slate-800 text-xs font-semibold">
+              ${p.liveUrl ? `<a href="${escapeHtml(p.liveUrl)}" target="_blank" class="text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1">Live Demo <i data-lucide="arrow-up-right" class="w-3.5 h-3.5"></i></a>` : ''}
+              ${p.githubUrl ? `<a href="${escapeHtml(p.githubUrl)}" target="_blank" class="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-1">Source Code <i data-lucide="github" class="w-3.5 h-3.5"></i></a>` : ''}
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      // Render Experience
+      const expList = document.getElementById('preview-experience-list');
+      expList.innerHTML = (portfolioData.experience || []).map(e => `
+        <div class="relative group/exp space-y-1.5">
+          <div class="absolute -left-[31px] top-1.5 w-3 h-3 rounded-full bg-brand-600 ring-4 ring-white dark:ring-slate-900"></div>
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+            <h4 class="font-bold text-sm text-slate-900 dark:text-white">${escapeHtml(e.role)}</h4>
+            <span class="text-xs font-medium text-brand-600 dark:text-brand-400 font-mono">${escapeHtml(e.period)}</span>
+          </div>
+          <div class="text-xs font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-2">
+            <span>${escapeHtml(e.company)}</span>
+            ${e.location ? `<span>&bull;</span> <span>${escapeHtml(e.location)}</span>` : ''}
+          </div>
+          <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed pt-1">${escapeHtml(e.description)}</p>
+        </div>
+      `).join('');
+
+      // Render Education
+      const eduList = document.getElementById('preview-education-list');
+      eduList.innerHTML = (portfolioData.education || []).map(ed => `
+        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 space-y-1">
+          <div class="flex items-center justify-between">
+            <h4 class="font-bold text-xs text-slate-900 dark:text-white">${escapeHtml(ed.degree)}</h4>
+            <span class="text-[11px] font-mono text-slate-500">${escapeHtml(ed.year)}</span>
+          </div>
+          <p class="text-xs font-medium text-brand-600 dark:text-brand-400">${escapeHtml(ed.institution)}</p>
+          ${ed.highlights ? `<p class="text-[11px] text-slate-500 dark:text-slate-400 pt-1">${escapeHtml(ed.highlights)}</p>` : ''}
+        </div>
+      `).join('');
+
+      // Contact & Footer
+      document.getElementById('preview-contact-email-btn').href = `mailto:${portfolioData.email}`;
+      document.getElementById('preview-footer-name').textContent = portfolioData.name;
+      document.getElementById('preview-year').textContent = new Date().getFullYear();
+
+      // Auto-save to localStorage
+      try {
+        localStorage.setItem('portfolicraft_saved_data', JSON.stringify(portfolioData));
+      } catch (e) {
+        // storage quota or file:// restrictions
+      }
+
+      lucide.createIcons();
+    }
+
+    // Helper for editing dynamic list fields
+    function updateDynamicField(category, index, key, value) {
+      if (portfolioData[category] && portfolioData[category][index]) {
+        portfolioData[category][index][key] = value;
+        updatePortfolio();
+      }
+    }
+
+    // Dynamic item creators
+    function addProjectItem() {
+      portfolioData.projects = portfolioData.projects || [];
+      portfolioData.projects.push({
+        title: "New Project",
+        description: "Describe what this project does, why you built it, and the architecture.",
+        tags: ["TypeScript", "React"],
+        liveUrl: "",
+        githubUrl: "",
+        imageUrl: ""
+      });
+      renderDynamicFormLists();
+      updatePortfolio();
+    }
+
+    function removeProjectItem(idx) {
+      portfolioData.projects.splice(idx, 1);
+      renderDynamicFormLists();
+      updatePortfolio();
+    }
+
+    function addExperienceItem() {
+      portfolioData.experience = portfolioData.experience || [];
+      portfolioData.experience.push({
+        role: "Software Engineer",
+        company: "Company Name",
+        location: "Remote",
+        period: "2024 - Present",
+        description: "Contributed to key product features and scaling systems."
+      });
+      renderDynamicFormLists();
+      updatePortfolio();
+    }
+
+    function removeExperienceItem(idx) {
+      portfolioData.experience.splice(idx, 1);
+      renderDynamicFormLists();
+      updatePortfolio();
+    }
+
+    function addEducationItem() {
+      portfolioData.education = portfolioData.education || [];
+      portfolioData.education.push({
+        degree: "B.S. in Computer Science",
+        institution: "University Name",
+        year: "2024",
+        highlights: "Dean's Honor List"
+      });
+      renderDynamicFormLists();
+      updatePortfolio();
+    }
+
+    function removeEducationItem(idx) {
+      portfolioData.education.splice(idx, 1);
+      renderDynamicFormLists();
+      updatePortfolio();
+    }
+
+    // Avatar image upload handler
+    function handleImageUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        document.getElementById('input-avatar').value = event.target.result;
+        updatePortfolio();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // ================= VIEW MODES =================
+    function setViewMode(mode) {
+      const editor = document.getElementById('editor-column');
+      const preview = document.getElementById('preview-column');
+      const floatingPill = document.getElementById('floating-edit-pill');
+
+      const splitBtn = document.getElementById('view-split-btn');
+      const editorBtn = document.getElementById('view-editor-btn');
+      const previewBtn = document.getElementById('view-preview-btn');
+
+      [splitBtn, editorBtn, previewBtn].forEach(b => {
+        b.className = "px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-slate-900";
+      });
+      const activeClass = "px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 bg-white dark:bg-slate-700 shadow-xs font-semibold text-brand-600 dark:text-brand-400";
+
+      if (mode === 'split') {
+        editor.classList.remove('hidden');
+        editor.className = "w-full md:w-1/2 lg:w-[480px] xl:w-[520px] shrink-0 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-y-auto flex flex-col";
+        preview.classList.remove('hidden');
+        floatingPill.classList.add('hidden');
+        splitBtn.className = activeClass;
+      } else if (mode === 'editor') {
+        editor.classList.remove('hidden');
+        editor.className = "w-full shrink-0 bg-white dark:bg-slate-900 overflow-y-auto flex flex-col max-w-3xl mx-auto border-x border-slate-200 dark:border-slate-800";
+        preview.classList.add('hidden');
+        floatingPill.classList.add('hidden');
+        editorBtn.className = activeClass;
+      } else if (mode === 'preview') {
+        editor.classList.add('hidden');
+        preview.classList.remove('hidden');
+        floatingPill.classList.remove('hidden');
+        previewBtn.className = activeClass;
+      }
+    }
+
+    // ================= THEME & ACCENT =================
+    function toggleDarkMode() {
+      const isDark = document.documentElement.classList.toggle('dark');
+      portfolioData.darkMode = isDark;
+      const themeIcon = document.getElementById('theme-icon');
+      if (isDark) {
+        themeIcon.setAttribute('data-lucide', 'sun');
+      } else {
+        themeIcon.setAttribute('data-lucide', 'moon');
+      }
+      lucide.createIcons();
+    }
+
+    function setAccentColor(colorKey) {
+      applyAccent(colorKey);
+      portfolioData.accent = colorKey;
+    }
+
+    function applyAccent(colorKey) {
+      const palette = PALETTES[colorKey] || PALETTES.indigo;
+      const root = document.documentElement;
+      Object.keys(palette).forEach(weight => {
+        root.style.setProperty(`--brand-${weight}`, palette[weight]);
+      });
+    }
+
+    // ================= SHARE MODAL & LINK GENERATION =================
+    function openShareModal() {
+      const shareUrl = getShareableURL(true);
+      const input = document.getElementById('share-link-input');
+      input.value = shareUrl;
+
+      document.getElementById('modal-test-link').href = shareUrl;
+
+      const modal = document.getElementById('share-modal');
+      modal.classList.remove('pointer-events-none');
+      modal.classList.remove('opacity-0');
+      modal.classList.add('opacity-100');
+    }
+
+    function closeShareModal() {
+      const modal = document.getElementById('share-modal');
+      modal.classList.add('opacity-0');
+      modal.classList.add('pointer-events-none');
+      modal.classList.remove('opacity-100');
+    }
+
+    function copyShareLink() {
+      const input = document.getElementById('share-link-input');
+      input.select();
+      navigator.clipboard.writeText(input.value).then(() => {
+        showToast("Link copied to clipboard! Share it with anyone.");
+      }).catch(() => {
+        document.execCommand('copy');
+        showToast("Link copied to clipboard!");
+      });
+    }
+
+    function showToast(text) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-text').textContent = text;
+      toast.classList.remove('opacity-0', 'pointer-events-none');
+      toast.classList.add('opacity-100');
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'pointer-events-none');
+        toast.classList.remove('opacity-100');
+      }, 3000);
+    }
+
+    // ================= EXPORT STANDALONE HTML =================
+    function exportStandaloneHTML() {
+      const renderedHTML = document.getElementById('portfolio-render').outerHTML;
+      const title = `${portfolioData.name} - Portfolio`;
+      const accentVars = Object.entries(PALETTES[portfolioData.accent || 'indigo'])
+        .map(([w, hex]) => `--brand-${w}: ${hex};`).join('\n      ');
+
+      const standalone = `<!DOCTYPE html>
+<html lang="en" class="${portfolioData.darkMode ? 'dark' : ''}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${escapeHtml(title)}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"><\/script>
+  <script src="https://unpkg.com/lucide@latest"><\/script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: 'var(--brand-50)', 100: 'var(--brand-100)', 200: 'var(--brand-200)',
+              300: 'var(--brand-300)', 400: 'var(--brand-400)', 500: 'var(--brand-500)',
+              600: 'var(--brand-600)', 700: 'var(--brand-700)', 800: 'var(--brand-800)',
+              900: 'var(--brand-900)'
+            }
+          }
+        }
+      }
+    };
+  <\/script>
+  <style>
+    :root {
+      ${accentVars}
+    }
+  </style>
+</head>
+<body class="bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors">
+  ${renderedHTML}
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+    });
+  <\/script>
+</body>
+</html>`;
+
+      const blob = new Blob([standalone], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${portfolioData.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-portfolio.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      showToast("Standalone HTML downloaded! Double-click to open anywhere.");
+    }
+
+    // Demo Data Loader
+    function loadSampleData() {
+      populateFormFields();
+      renderDynamicFormLists();
+      updatePortfolio();
+      showToast("Rich demo profile loaded!");
+    }
+
+    // String escape helper
+    function escapeHtml(string) {
+      if (!string) return '';
+      return String(string)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+  </script>
+</body>
+</html>
